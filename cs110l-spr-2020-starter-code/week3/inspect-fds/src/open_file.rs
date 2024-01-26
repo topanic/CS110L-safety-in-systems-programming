@@ -137,7 +137,25 @@ impl OpenFile {
     #[allow(unused)] // TODO: delete this line for Milestone 4
     pub fn from_fd(pid: usize, fd: usize) -> Option<OpenFile> {
         // TODO: implement for Milestone 4
-        unimplemented!();
+        // unimplemented!();
+        let path = fs::read_link(format!(
+            "/proc/{}/fd/{}",
+            pid, fd
+        )).ok()?;
+        let name = OpenFile::path_to_name(path.to_str()?);
+        let fdinfo = fs::read_to_string(format!(
+            "/proc/{}/fdinfo/{}",
+            pid, fd
+        )).ok()?;
+        let cursor = OpenFile::parse_cursor(&fdinfo)?;
+        let access_mode = OpenFile::parse_access_mode(&fdinfo)?;
+        Some(
+            OpenFile {
+                name,
+                cursor,
+                access_mode,
+            }
+        ) 
     }
 
     /// This function returns the OpenFile's name with ANSI escape codes included to colorize
